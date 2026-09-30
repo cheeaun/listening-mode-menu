@@ -66,7 +66,7 @@ jobs:
           test "$(lipo -archs "$EXECUTABLE")" = "arm64"
           test -f "dist/Listening Mode Menu.app/Contents/Resources/AppIcon.icns"
           xcrun stapler validate "$DMG"
-          (cd dist && shasum -a 256 "Listening Mode Menu-$VERSION.dmg" > "Listening Mode Menu-$VERSION.dmg.sha256")
+          shasum -a 256 "$DMG" | sed "s|  .*|  Listening.Mode.Menu-$VERSION.dmg|" > "$DMG.sha256"
 
       - name: Upload DMG artifact
         uses: actions/upload-artifact@v4

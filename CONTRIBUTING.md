@@ -52,10 +52,10 @@ The release workflow uses the Actions run number as the app bundle build number.
    ```
 
 3. Watch the **Actions** tab for the `Build and Release` workflow. A failed job does not publish a release; fix the failure and use a new version tag if the release commit or version changes.
-4. When the workflow succeeds, confirm that GitHub created the release and attached `Listening Mode Menu-1.2.3.dmg` and `Listening Mode Menu-1.2.3.dmg.sha256`. Download both files into the same directory and check the digest with:
+4. When the workflow succeeds, confirm that GitHub created the release and attached `Listening.Mode.Menu-1.2.3.dmg` and `Listening.Mode.Menu-1.2.3.dmg.sha256`. GitHub normalizes spaces in uploaded asset names to periods. Download both files into the same directory and check the digest with:
 
    ```bash
-   shasum -a 256 -c "Listening Mode Menu-1.2.3.dmg.sha256"
+   shasum -a 256 -c "Listening.Mode.Menu-1.2.3.dmg.sha256"
    ```
 
 The tag determines `CFBundleShortVersionString` and the DMG filename: `v1.2.3` becomes `1.2.3`. The workflow run number becomes `CFBundleVersion`; it is not manually incremented in `Package.swift`. The local build script defaults (`VERSION=1.0.0`, `BUILD_NUMBER=1`) are only for local builds and are not used to choose the tagged release version.
