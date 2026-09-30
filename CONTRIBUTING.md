@@ -62,4 +62,11 @@ The tag determines `CFBundleShortVersionString` and the DMG filename: `v1.2.3` b
 
 The workflow creates the GitHub Release and uploads assets, but it does not generate release notes. Before announcing a release, edit the release on GitHub to add a concise summary of user-visible changes and any known issues. The release workflow is attached to tags; the CI workflow currently runs on pull requests and pushes to `main`.
 
+### Release workflow troubleshooting
+
+- The certificate-import action creates and unlocks a temporary `signing_temp` keychain. It does not output a keychain path. Do not reference `steps.import-certs.outputs.keychain` or try to unlock it using an empty path.
+- `notarytool store-credentials` uses the runner's keychain search list, which the import action updates to include its temporary keychain. Do not pass a guessed `--keychain signing_temp.keychain` path; the actual keychain file is stored under the runner's Library Keychains directory.
+- If a release job fails, inspect the first failing Actions step and its log before changing secrets. A failed tag still points at its original commit; fix the workflow on `main` and use a new version tag for the retry. Do not force-move a tag that has already been pushed.
+- Confirm a successful release contains both the DMG and its `.sha256` asset, and verify the checksum after downloading both. GitHub normalizes spaces in asset filenames to periods, so the checksum must reference the published dotted filename.
+
 If private vulnerability reporting is available in repository settings, enable it before opening the repository to public reports.
