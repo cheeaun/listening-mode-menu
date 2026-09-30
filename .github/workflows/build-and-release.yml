@@ -42,10 +42,8 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-          KEYCHAIN_PATH: ${{ steps.import-certs.outputs.keychain }}
-          KEYCHAIN_PASSWORD: ${{ steps.import-certs.outputs.keychain-password }}
+          KEYCHAIN_PATH: signing_temp.keychain
         run: |
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           xcrun notarytool store-credentials "notarytool-profile" \
             --apple-id "$APPLE_ID" \
             --team-id "$APPLE_TEAM_ID" \
