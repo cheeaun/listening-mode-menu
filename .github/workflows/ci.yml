@@ -39,6 +39,7 @@ jobs:
 
       - name: Build and inspect DMG layout
         run: |
+          scripts/build.sh dmg
           DMG="$(find dist -maxdepth 1 -name 'Listening Mode Menu-*.dmg' -print -quit)"
           test -n "$DMG"
           MOUNT="$(mktemp -d)"
