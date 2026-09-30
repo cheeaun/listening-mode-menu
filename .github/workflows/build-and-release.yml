@@ -42,13 +42,11 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-          KEYCHAIN_PATH: signing_temp.keychain
         run: |
           xcrun notarytool store-credentials "notarytool-profile" \
             --apple-id "$APPLE_ID" \
             --team-id "$APPLE_TEAM_ID" \
-            --password "$APPLE_APP_SPECIFIC_PASSWORD" \
-            --keychain "$KEYCHAIN_PATH"
+            --password "$APPLE_APP_SPECIFIC_PASSWORD"
 
       - name: Build, sign, and notarize
         env:
