@@ -1,0 +1,88 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  notarize:
+    name: Build, Sign, Notarize and Release
+    runs-on: macos-14
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install icon generator
+        run: brew install librsvg
+
+      - name: Extract and validate version from tag
+        id: version
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          if [[ ! "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+([+-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "Invalid semantic version tag: $GITHUB_REF_NAME" >&2
+            exit 1
+          fi
+          echo "version=$TAG" >> "$GITHUB_OUTPUT"
+          echo "build_number=$GITHUB_RUN_NUMBER" >> "$GITHUB_OUTPUT"
+
+      - name: Import code signing certificates
+        id: import-certs
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.CERTIFICATE_P12_BASE64 }}
+          p12-password: ${{ secrets.CERTIFICATE_P12_PASSWORD }}
+
+      - name: Store notarytool credentials
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          KEYCHAIN_PATH: ${{ steps.import-certs.outputs.keychain }}
+          KEYCHAIN_PASSWORD: ${{ steps.import-certs.outputs.keychain-password }}
+        run: |
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          xcrun notarytool store-credentials "notarytool-profile" \
+            --apple-id "$APPLE_ID" \
+            --team-id "$APPLE_TEAM_ID" \
+            --password "$APPLE_APP_SPECIFIC_PASSWORD" \
+            --keychain "$KEYCHAIN_PATH"
+
+      - name: Build, sign, and notarize
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          BUILD_NUMBER: ${{ steps.version.outputs.build_number }}
+          SIGN_IDENTITY: ${{ secrets.SIGN_IDENTITY }}
+          NOTARY_PROFILE: notarytool-profile
+        run: scripts/build.sh notarize
+
+      - name: Verify final release artifacts
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          DMG="dist/Listening Mode Menu-$VERSION.dmg"
+          test -f "$DMG"
+          EXECUTABLE="dist/Listening Mode Menu.app/Contents/MacOS/ListeningModeMenu"
+          test "$(lipo -archs "$EXECUTABLE")" = "arm64"
+          test -f "dist/Listening Mode Menu.app/Contents/Resources/AppIcon.icns"
+          xcrun stapler validate "$DMG"
+          (cd dist && shasum -a 256 "Listening Mode Menu-$VERSION.dmg" > "Listening Mode Menu-$VERSION.dmg.sha256")
+
+      - name: Upload DMG artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Listening-Mode-Menu-${{ steps.version.outputs.version }}
+          path: |
+            dist/Listening Mode Menu-${{ steps.version.outputs.version }}.dmg
+            dist/Listening Mode Menu-${{ steps.version.outputs.version }}.dmg.sha256
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/Listening Mode Menu-${{ steps.version.outputs.version }}.dmg
+            dist/Listening Mode Menu-${{ steps.version.outputs.version }}.dmg.sha256

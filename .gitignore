@@ -1,0 +1,11 @@
+.DS_Store
+.codex
+.env
+.env.*
+!.env.example
+.build/
+.swiftpm/
+dist/
+*.app/
+*.dmg
+*.zip

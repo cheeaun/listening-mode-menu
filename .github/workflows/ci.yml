@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test-and-build:
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install icon generator
+        run: brew install librsvg
+
+      - name: Run tests
+        run: swift test
+
+      - name: Build release app
+        run: scripts/build.sh build
+
+      - name: Verify app architecture and metadata
+        run: |
+          EXECUTABLE="dist/Listening Mode Menu.app/Contents/MacOS/ListeningModeMenu"
+          plutil -lint "dist/Listening Mode Menu.app/Contents/Info.plist"
+          test "$(lipo -archs "$EXECUTABLE")" = "arm64"
+          test -f "dist/Listening Mode Menu.app/Contents/Resources/AppIcon.icns"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' 'dist/Listening Mode Menu.app/Contents/Info.plist')" = "cheeaun.ListeningModeMenu"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :LSMinimumSystemVersion' 'dist/Listening Mode Menu.app/Contents/Info.plist')" = "14.0"
