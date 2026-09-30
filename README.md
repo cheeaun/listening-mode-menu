@@ -41,6 +41,7 @@ The menu contains the current mode, the log source, and a Quit item. Before a mo
 - Swift toolchain from Xcode or Command Line Tools
 - AirPods that emit listening-mode changes through `bluetoothd`
 - `rsvg-convert` (from `brew install librsvg`) to generate the app icon from `assets/app-icon.svg`; builds skip the icon if it is unavailable
+- Node.js 24 LTS and npm only when creating a DMG with `scripts/build.sh dmg`
 
 ## Build
 
@@ -62,11 +63,14 @@ Run locally:
 scripts/build.sh run
 ```
 
-Build a DMG:
+Build a Finder-styled DMG (uses `create-dmg` v8.1.0's default app-to-Applications window):
 
 ```bash
+npm install --global create-dmg@8.1.0
 scripts/build.sh dmg
 ```
+
+The DMG uses the upstream tool's default layout and artwork. `scripts/build.sh dmg` does not require signing or notarization; when `SIGN_IDENTITY` is set, it signs the app first. The release workflow separately signs, notarizes, and staples both the app and DMG.
 
 Sign for distribution:
 

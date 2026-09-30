@@ -12,8 +12,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install icon generator
-        run: brew install librsvg
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Install packaging tools
+        run: |
+          brew install librsvg
+          npm install --global create-dmg@8.1.0
 
       - name: Run tests
         run: swift test
@@ -29,3 +36,14 @@ jobs:
           test -f "dist/Listening Mode Menu.app/Contents/Resources/AppIcon.icns"
           test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' 'dist/Listening Mode Menu.app/Contents/Info.plist')" = "cheeaun.ListeningModeMenu"
           test "$(/usr/libexec/PlistBuddy -c 'Print :LSMinimumSystemVersion' 'dist/Listening Mode Menu.app/Contents/Info.plist')" = "14.0"
+
+      - name: Build and inspect DMG layout
+        run: |
+          DMG="$(find dist -maxdepth 1 -name 'Listening Mode Menu-*.dmg' -print -quit)"
+          test -n "$DMG"
+          MOUNT="$(mktemp -d)"
+          hdiutil attach "$DMG" -nobrowse -readonly -mountpoint "$MOUNT"
+          test -d "$MOUNT/Listening Mode Menu.app"
+          test -L "$MOUNT/Applications"
+          hdiutil detach "$MOUNT"
+          rmdir "$MOUNT"

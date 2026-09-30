@@ -16,8 +16,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install icon generator
-        run: brew install librsvg
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Install icon and DMG packaging tools
+        run: |
+          brew install librsvg
+          npm install --global create-dmg@8.1.0
 
       - name: Extract and validate version from tag
         id: version

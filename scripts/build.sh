@@ -42,7 +42,7 @@ Commands:
   telemetry   Build, launch, and stream subsystem unified logs
   verify      Build, launch, and confirm the process is running
   sign        Build and sign with SIGN_IDENTITY
-  dmg         Build a DMG. Signs first when SIGN_IDENTITY is set
+  dmg         Build a Finder-styled DMG (requires create-dmg)
   notarize    Sign app, create/sign DMG, submit for notarization, then staple
   clean       Remove build artifacts
 
@@ -164,13 +164,26 @@ sign_app() {
 }
 
 create_dmg() {
-  rm -f "$DMG_PATH"
-  hdiutil create \
-    -volname "$APP_NAME" \
-    -srcfolder "$APP_BUNDLE" \
-    -ov \
-    -format UDZO \
-    "$DMG_PATH"
+  if ! command -v create-dmg >/dev/null 2>&1; then
+    echo "create-dmg is required to package a DMG. Install it with: npm install --global create-dmg@8.1.0" >&2
+    return 1
+  fi
+
+  local generated_dmg="$DIST_DIR/$APP_NAME $VERSION.dmg"
+  rm -f "$DMG_PATH" "$generated_dmg"
+  create-dmg \
+    "$APP_BUNDLE" \
+    "$DIST_DIR" \
+    --overwrite \
+    --no-code-sign \
+    --dmg-title "$APP_NAME"
+
+  if [[ ! -f "$generated_dmg" ]]; then
+    echo "create-dmg did not create the expected image: $generated_dmg" >&2
+    return 1
+  fi
+
+  mv "$generated_dmg" "$DMG_PATH"
   echo "Created $DMG_PATH"
 }
 

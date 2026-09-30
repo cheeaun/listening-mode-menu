@@ -19,6 +19,8 @@ The listening-mode log format is undocumented and may change across macOS releas
 
 Releases are built and published by `.github/workflows/build-and-release.yml`. The workflow runs when a version tag is pushed. It builds an Apple Silicon (arm64) app, signs it with Developer ID, submits the app and DMG to Apple notarization, staples the tickets, and creates a GitHub Release with the DMG and its SHA-256 checksum. This is notarized direct distribution, not Mac App Store distribution.
 
+The workflow uses the latest major of `actions/setup-node` and Node.js 24 LTS, and pins `create-dmg` to v8.1.0. The tool creates its standard Finder installer window with the app and an Applications shortcut; its background and layout are fixed by upstream. It only packages the image: the build script separately signs the DMG, and the release flow notarizes and staples the app before packaging and the DMG afterward. The tool is also required for local `scripts/build.sh dmg`; see [README.md](README.md#build).
+
 ### One-time setup
 
 1. Enroll in the Apple Developer Program and create a **Developer ID Application** certificate for the team that owns the app.
