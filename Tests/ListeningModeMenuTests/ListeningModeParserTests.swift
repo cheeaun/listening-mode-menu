@@ -91,4 +91,21 @@ final class ListeningModeParserTests: XCTestCase {
             .adaptive
         )
     }
+
+    func testAppMetadataReadsVersionAndBuildFromBundleInfo() {
+        let versionInfo = AppMetadata.versionInfo(from: [
+            "CFBundleShortVersionString": "0.0.5",
+            "CFBundleVersion": "42",
+        ])
+
+        XCTAssertEqual(versionInfo.version, "0.0.5")
+        XCTAssertEqual(versionInfo.build, "42")
+    }
+
+    func testAppMetadataFallsBackWhenBundleInfoIsMissing() {
+        let versionInfo = AppMetadata.versionInfo(from: [:])
+
+        XCTAssertEqual(versionInfo.version, "Unknown")
+        XCTAssertEqual(versionInfo.build, "Unknown")
+    }
 }

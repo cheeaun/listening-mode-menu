@@ -207,11 +207,19 @@ private final class BluetoothLogMonitor {
     }
 }
 
-private enum AppMetadata {
+enum AppMetadata {
     static let appName = "Listening Mode Menu"
     static let executableName = "ListeningModeMenu"
     static let bundleIdentifier = "cheeaun.ListeningModeMenu"
+    static let repositoryURL = URL(string: "https://github.com/cheeaun/listening-mode-menu")!
     static let bluetoothLogPredicate = #"process == "bluetoothd" AND eventMessage CONTAINS "LsnM""#
+
+    static func versionInfo(from infoDictionary: [String: Any]) -> (version: String, build: String) {
+        (
+            version: infoDictionary["CFBundleShortVersionString"] as? String ?? "Unknown",
+            build: infoDictionary["CFBundleVersion"] as? String ?? "Unknown"
+        )
+    }
 }
 
 private final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -241,8 +249,32 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem(title: "Listening Mode: Unknown", action: nil, keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Monitoring bluetoothd logs", action: nil, keyEquivalent: ""))
         menu.addItem(.separator())
+
+        let aboutItem = NSMenuItem(title: "About Listening Mode Menu", action: #selector(showAbout), keyEquivalent: "")
+        aboutItem.target = self
+        menu.addItem(aboutItem)
+
+        let repositoryItem = NSMenuItem(title: "GitHub Repository", action: #selector(openRepository), keyEquivalent: "")
+        repositoryItem.target = self
+        menu.addItem(repositoryItem)
+
+        menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
         statusItem.menu = menu
+    }
+
+    @objc private func showAbout() {
+        let versionInfo = AppMetadata.versionInfo(from: Bundle.main.infoDictionary ?? [:])
+        NSApp.activate(ignoringOtherApps: true)
+        NSApp.orderFrontStandardAboutPanel(options: [
+            .applicationName: AppMetadata.appName,
+            .version: versionInfo.build,
+            .applicationVersion: versionInfo.version,
+        ])
+    }
+
+    @objc private func openRepository() {
+        NSWorkspace.shared.open(AppMetadata.repositoryURL)
     }
 
     private func apply(_ mode: ListeningMode) {

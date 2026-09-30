@@ -33,7 +33,7 @@ The app filters for log messages that contain `LsnM`, extracts the mode value, n
 bluetoothd log line -> LsnM parser -> normalized listening mode -> menu bar icon
 ```
 
-The menu contains the current mode, the log source, and a Quit item. Before a mode has been detected, the app shows an AirPods Pro symbol.
+The menu contains the current mode, the log source, an About panel with the installed app version and build number, a link to this GitHub repository, and a Quit item. Before a mode has been detected, the app shows an AirPods Pro symbol.
 
 ## Requirements
 

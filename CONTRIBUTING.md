@@ -11,7 +11,7 @@ Thanks for considering a contribution.
 
 ## Pull requests
 
-Describe the change and how it was verified. For parser changes, include representative `bluetoothd` log lines and tests. Please avoid including device identifiers or other personal data from logs.
+Describe the change and how it was verified. For parser changes, include representative `bluetoothd` log lines and tests. Please avoid including device identifiers or other personal data from logs. For menu or About-panel changes, verify the visible version/build against the app bundle metadata.
 
 The listening-mode log format is undocumented and may change across macOS releases; contributions should not present it as a stable Apple API.
 
