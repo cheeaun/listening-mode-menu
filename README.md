@@ -6,6 +6,8 @@ The app watches `bluetoothd` unified log events containing `LsnM`, then updates 
 
 **[Download Listening Mode Menu v0.0.3 for Apple Silicon](https://github.com/cheeaun/listening-mode-menu/releases/download/v0.0.3/Listening.Mode.Menu-0.0.3.dmg)** · [All releases](https://github.com/cheeaun/listening-mode-menu/releases)
 
+The menu bar icon reflects the current mode. Opening it shows the mode, then **About Listening Mode Menu**, which reports the version and build and links to this repository, and **Quit**.
+
 ## Install a Release
 
 1. Download the latest `Listening.Mode.Menu-<version>.dmg` from [GitHub Releases](https://github.com/cheeaun/listening-mode-menu/releases/latest).

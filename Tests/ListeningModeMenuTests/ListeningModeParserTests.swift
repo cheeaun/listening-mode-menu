@@ -108,4 +108,12 @@ final class ListeningModeParserTests: XCTestCase {
         XCTAssertEqual(versionInfo.version, "Unknown")
         XCTAssertEqual(versionInfo.build, "Unknown")
     }
+
+    func testAboutCreditsIncludeClickableRepositoryLink() {
+        let credits = AppMetadata.aboutCredits
+        let repositoryRange = (credits.string as NSString).range(of: "GitHub Repository")
+
+        XCTAssertTrue(credits.string.contains("Shows your AirPods listening mode in the menu bar."))
+        XCTAssertEqual(credits.attribute(.link, at: repositoryRange.location, effectiveRange: nil) as? URL, AppMetadata.repositoryURL)
+    }
 }

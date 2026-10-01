@@ -220,6 +220,15 @@ enum AppMetadata {
             build: infoDictionary["CFBundleVersion"] as? String ?? "Unknown"
         )
     }
+
+    static var aboutCredits: NSAttributedString {
+        let credits = NSMutableAttributedString(string: "Shows your AirPods listening mode in the menu bar.\n")
+        credits.append(NSAttributedString(
+            string: "GitHub Repository",
+            attributes: [.link: repositoryURL]
+        ))
+        return credits
+    }
 }
 
 private final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -254,10 +263,6 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         aboutItem.target = self
         menu.addItem(aboutItem)
 
-        let repositoryItem = NSMenuItem(title: "GitHub Repository", action: #selector(openRepository), keyEquivalent: "")
-        repositoryItem.target = self
-        menu.addItem(repositoryItem)
-
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
         statusItem.menu = menu
@@ -270,11 +275,8 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
             .applicationName: AppMetadata.appName,
             .version: versionInfo.build,
             .applicationVersion: versionInfo.version,
+            .credits: AppMetadata.aboutCredits,
         ])
-    }
-
-    @objc private func openRepository() {
-        NSWorkspace.shared.open(AppMetadata.repositoryURL)
     }
 
     private func apply(_ mode: ListeningMode) {
