@@ -1,5 +1,6 @@
 import AppKit
 import Foundation
+import ServiceManagement
 import os
 
 enum ListeningMode: String, CaseIterable {
@@ -231,13 +232,81 @@ enum AppMetadata {
     }
 }
 
-private final class AppDelegate: NSObject, NSApplicationDelegate {
+enum LaunchAtLogin {
+    private static let logger = Logger(subsystem: AppMetadata.bundleIdentifier, category: "LaunchAtLogin")
+    private static let requestedKey = "LaunchAtLoginRequested"
+    private static let registeredPathKey = "LaunchAtLoginRegisteredPath"
+
+    static var isEnabled: Bool {
+        SMAppService.mainApp.status == .enabled
+    }
+
+    static func logStatus() {
+        logger.info("Login item status: \(statusName, privacy: .public) for \(Bundle.main.bundlePath, privacy: .public)")
+    }
+
+    private static var statusName: String {
+        switch SMAppService.mainApp.status {
+        case .notRegistered: "not registered"
+        case .enabled: "enabled"
+        case .requiresApproval: "requires approval"
+        case .notFound: "not found"
+        default: "unknown"
+        }
+    }
+
+    static func setEnabled(_ enabled: Bool) {
+        do {
+            if enabled {
+                try SMAppService.mainApp.register()
+            } else {
+                try SMAppService.mainApp.unregister()
+            }
+            UserDefaults.standard.set(enabled, forKey: requestedKey)
+            if enabled {
+                UserDefaults.standard.set(Bundle.main.bundlePath, forKey: registeredPathKey)
+            }
+            logger.info("Launch at login turned \(enabled ? "on" : "off")")
+        } catch {
+            logger.error(
+                "Could not \(enabled ? "register" : "unregister") login item: \(error.localizedDescription)"
+            )
+        }
+    }
+
+    /// A login item belongs to the bundle that registered it, so moving the app from `dist/`
+    /// to `/Applications` orphans the entry. Re-register only when the bundle moved. If the
+    /// same bundle is now reporting itself disabled, the user turned it off elsewhere and we
+    /// defer to that instead of re-enabling it on every launch.
+    static func syncWithBundleLocation() {
+        guard UserDefaults.standard.bool(forKey: requestedKey), !isEnabled else { return }
+        let registeredPath = UserDefaults.standard.string(forKey: registeredPathKey)
+
+        if registeredPath == Bundle.main.bundlePath {
+            logger.info("Login item was disabled outside the app; clearing the stored preference")
+            UserDefaults.standard.set(false, forKey: requestedKey)
+            return
+        }
+
+        logger.info("Re-registering login item for the moved bundle at \(Bundle.main.bundlePath, privacy: .public)")
+        do {
+            try SMAppService.mainApp.register()
+            UserDefaults.standard.set(Bundle.main.bundlePath, forKey: registeredPathKey)
+        } catch {
+            logger.error("Could not re-register login item: \(error.localizedDescription)")
+        }
+    }
+}
+
+private final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let monitor = BluetoothLogMonitor()
     private var currentMode: ListeningMode?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+        LaunchAtLogin.logStatus()
+        LaunchAtLogin.syncWithBundleLocation()
         configureStatusItem()
 
         monitor.onModeChange = { [weak self] mode in
@@ -263,9 +332,25 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         aboutItem.target = self
         menu.addItem(aboutItem)
 
+        let launchAtLoginItem = NSMenuItem(title: "Launch at Login", action: #selector(toggleLaunchAtLogin(_:)), keyEquivalent: "")
+        launchAtLoginItem.target = self
+        launchAtLoginItem.state = LaunchAtLogin.isEnabled ? .on : .off
+        menu.addItem(launchAtLoginItem)
+
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        menu.delegate = self
         statusItem.menu = menu
+    }
+
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        let enabled = LaunchAtLogin.isEnabled
+        menu.items.first { $0.action == #selector(toggleLaunchAtLogin(_:)) }?.state = enabled ? .on : .off
+    }
+
+    @objc private func toggleLaunchAtLogin(_ sender: NSMenuItem) {
+        LaunchAtLogin.setEnabled(!LaunchAtLogin.isEnabled)
+        sender.state = LaunchAtLogin.isEnabled ? .on : .off
     }
 
     @objc private func showAbout() {

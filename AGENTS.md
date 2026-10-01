@@ -27,4 +27,5 @@
 
 - After editing Swift sources, re-read the changed lines before rebuilding — the editor tool can report success without the change persisting. Confirm via `grep`/`sed -n` that the new pattern is actually in the file, especially for regex literals and escape sequences (`\b`, `\s`, `\n` vs `\\b`, `\\s`, `\\n`).
 - A successful `swift build` only proves the code compiles; it does not prove the binary is correct. Always smoke-test the rebuilt `.app` (launch, watch the menu bar item, or query via AppleScript) before shipping or notarizing.
-- There are currently no automated tests. `Package.swift` defines only the executable target. Consider adding a test target covering `ListeningModeParser` against real `log show` output so regex regressions surface at `swift test` time.
+- Login items are environment-dependent. `LaunchAtLogin` uses `SMAppService.mainApp`, and an unsigned bundle in `dist/` reports status `not found`, so only a signed copy in `/Applications` can confirm the toggle actually registers. Read the decision from the logs rather than assuming, and see [docs/launch-at-login.md](docs/launch-at-login.md).
+- `swift test` runs `Tests/ListeningModeMenuTests`, which covers parsing only. The menu and login-item code has no automated coverage because it needs a real app bundle and user-level login-item state.

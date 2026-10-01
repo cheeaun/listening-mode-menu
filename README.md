@@ -6,7 +6,7 @@ The app watches `bluetoothd` unified log events containing `LsnM`, then updates 
 
 **[Download Listening Mode Menu v0.0.6 for Apple Silicon](https://github.com/cheeaun/listening-mode-menu/releases/download/v0.0.6/Listening.Mode.Menu-0.0.6.dmg)** · [All releases](https://github.com/cheeaun/listening-mode-menu/releases)
 
-The menu bar icon reflects the current mode. Opening it shows the mode, then **About Listening Mode Menu**, which reports the version and build and links to this repository, and **Quit**.
+The menu bar icon reflects the current mode. Opening it shows the mode, then **About Listening Mode Menu**, which reports the version and build and links to this repository, then **Launch at Login**, and **Quit**.
 
 ## Install a Release
 
@@ -15,7 +15,7 @@ The menu bar icon reflects the current mode. Opening it shows the mode, then **A
 3. Open the DMG and drag `Listening Mode Menu.app` to `/Applications`.
 4. Open the app. macOS may ask you to confirm opening a downloaded app; releases are Developer ID signed and notarized.
 
-To uninstall, quit the app from its menu bar menu and move `Listening Mode Menu.app` from `/Applications` to the Trash. The app does not install a background service or login item.
+To uninstall, first turn off **Launch at Login** if it is on, then quit the app from its menu bar menu and move `Listening Mode Menu.app` from `/Applications` to the Trash. The app installs nothing else and runs no background service.
 
 GitHub Releases are the supported distribution channel. The current log-based implementation has no demonstrated sandbox-compatible data source, so this project does not provide a Mac App Store build.
 
@@ -35,7 +35,7 @@ The app filters for log messages that contain `LsnM`, extracts the mode value, n
 bluetoothd log line -> LsnM parser -> normalized listening mode -> menu bar icon
 ```
 
-The menu contains the current mode, the log source, an About panel with the installed app version and build number, a link to this GitHub repository, and a Quit item. Before a mode has been detected, the app shows an AirPods Pro symbol.
+The menu contains the current mode, the log source, an About panel with the installed app version and build number, a link to this GitHub repository, a **Launch at Login** toggle, and a Quit item. Launch at Login uses macOS's `SMAppService` login-item API rather than a helper app or launchd agent; see [Launch at Login](docs/launch-at-login.md) for how it behaves in a dev build versus an installed one. Before a mode has been detected, the app shows an AirPods Pro symbol.
 
 ## Requirements
 
