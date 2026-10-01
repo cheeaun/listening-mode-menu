@@ -43,26 +43,38 @@ The release workflow uses the Actions run number as the app bundle build number.
 
 ### Publish a version
 
+The version lives in the git tag, not in a file. Nothing needs editing first: bump the version by tagging the release commit.
+
+```bash
+git checkout main && git pull --ff-only
+NEXT=$(git tag --list 'v*.*.*' --sort=-v:refname | head -1 | sed 's/^v//' | awk -F. '{printf "v%d.%d.%d\n", $1, $2, $3+1}')
+git tag -a "$NEXT" -m "Release $NEXT" && git push origin "$NEXT"
+```
+
+That derives the next version from the highest existing tag (patch bump) and creates an annotated tag matching the `Release vX.Y.Z` message used by earlier tags. Tag by hand for a minor or major bump, for example `v0.1.0` or `v1.0.0`.
+
 1. Merge and push the release-ready changes to `main`. CI runs tests and builds the unsigned app on pushes to `main` and pull requests.
-2. Create and push a new semantic-version tag from the commit to release. Include the `v` prefix:
+2. Tag and push, as above. Pushing a `v*.*.*` tag is what triggers the release; no other file records the version, so there is nothing to keep in sync.
+3. Watch the **Actions** tab for the **Build and Release** workflow, or poll it:
 
    ```bash
-   git checkout main
-   git pull --ff-only
-   git tag v1.2.3
-   git push origin v1.2.3
+   gh run list --workflow build-and-release.yml --limit 3
+   gh run watch
    ```
 
-3. Watch the **Actions** tab for the `Build and Release` workflow. A failed job does not publish a release; fix the failure and use a new version tag if the release commit or version changes.
-4. When the workflow succeeds, confirm that GitHub created the release and attached `Listening.Mode.Menu-1.2.3.dmg` and `Listening.Mode.Menu-1.2.3.dmg.sha256`. GitHub normalizes spaces in uploaded asset names to periods. Download both files into the same directory and check the digest with:
+4. Confirm the release published both assets:
 
    ```bash
-   shasum -a 256 -c "Listening.Mode.Menu-1.2.3.dmg.sha256"
+   gh release view "$NEXT" --json assets --jq '.assets[].name'
+   # Listening.Mode.Menu-0.0.7.dmg
+   # Listening.Mode.Menu-0.0.7.dmg.sha256
    ```
 
-The tag determines `CFBundleShortVersionString` and the DMG filename: `v1.2.3` becomes `1.2.3`. The workflow run number becomes `CFBundleVersion`; it is not manually incremented in `Package.swift`. The local build script defaults (`VERSION=1.0.0`, `BUILD_NUMBER=1`) are only for local builds and are not used to choose the tagged release version.
+   GitHub normalizes spaces in uploaded asset names to periods. Download both files into the same directory and check the digest with `shasum -a 256 -c "Listening.Mode.Menu-<version>.dmg.sha256"`.
 
-The workflow creates the GitHub Release and uploads assets, but it does not generate release notes. Before announcing a release, edit the release on GitHub to add a concise summary of user-visible changes and any known issues. The release workflow is attached to tags; the CI workflow currently runs on pull requests and pushes to `main`.
+The tag determines `CFBundleShortVersionString` and the DMG filename: `v1.2.3` becomes `1.2.3`. The workflow run number becomes `CFBundleVersion`; it is not manually incremented in `Package.swift`. The local build script defaults (`VERSION=1.0.0`, `BUILD_NUMBER=1`) are only for local builds and are not used to choose the tagged release version. Do not put a version number in README.md; link `releases/latest` and let the Releases page act as the changelog.
+
+The workflow creates the GitHub Release and uploads assets, but it does not generate release notes. The release workflow is attached to tags; the CI workflow currently runs on pull requests and pushes to `main`.
 
 ### Release workflow troubleshooting
 
