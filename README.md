@@ -4,6 +4,8 @@ Menu bar app that shows the current AirPods listening mode on macOS.
 
 **[Download the latest release](https://github.com/cheeaun/listening-mode-menu/releases/latest)** · Apple Silicon (arm64) · macOS 14+
 
+<img src="docs/assets/menu-screenshot.jpg" alt="Listening Mode Menu in the macOS menu bar, showing the current AirPods listening mode" width="760">
+
 The app reads `bluetoothd` log events, then updates a menu bar icon when the mode changes: Off, Noise Cancellation, Transparency, or Adaptive. The menu holds the current mode, **About**, **Launch at Login**, and **Quit**.
 
 ## Install
